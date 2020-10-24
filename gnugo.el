@@ -1,10 +1,10 @@
 ;;; gnugo.el --- play GNU Go in a buffer         -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2014-2020  Free Software Foundation, Inc.
 
 ;; Author: Thien-Thi Nguyen <ttn@gnu.org>
 ;; Maintainer: Thien-Thi Nguyen <ttn@gnu.org>
-;; Version: 3.1.0
+;; Version: 3.1.1
 ;; Package-Requires: ((ascii-art-to-unicode "1.5") (xpm "1.0.1") (cl-lib "0.5"))
 ;; Keywords: games, processes
 ;; URL: http://www.gnuvola.org/software/gnugo/
@@ -92,7 +92,7 @@
 ;;;---------------------------------------------------------------------------
 ;;; Political arts
 
-(defconst gnugo-version "3.1.0"
+(defconst gnugo-version "3.1.1"
   "Version of gnugo.el currently loaded.
 This follows a MAJOR.MINOR.PATCH scheme.")
 
@@ -204,7 +204,8 @@ list of forms.")
     ("O" . gnugo-O-face))
   "Font lock keywords for `gnugo-board-mode'.")
 
-(defvar gnugo-option-history nil)
+(defvar gnugo-option-history nil
+  "History list of options for `gnugo' invocation.")
 
 (defvar gnugo-state nil)                ; hint: C-c C-p
 
@@ -266,10 +267,7 @@ you may never really understand to any degree of personal satisfaction\".
  :waiting-start
 
  :black-captures -- these are strings since gnugo.el doesn't do anything
- :white-captures    w/ the information besides display it in the mode line;
-                    gory details in functions `gnugo-propertize-board-buffer'
-                    and `gnugo-merge-showboard-results' (almost more effort
-                    than they are worth!)
+ :white-captures    w/ the information besides display it in the mode line
 
  :display-using-images -- XPMs, to be precise; see functions `gnugo-yy',
                           `gnugo-image-display-mode' and `gnugo-refresh',
@@ -386,6 +384,7 @@ Handle the big, slow-to-render, and/or uninteresting ones specially."
   (string= "black" string))
 
 (defun gnugo-other (color)
+  "If COLOR is \"black\", return \"white\", otherwise \"black\"."
   (if (gnugo--blackp color) "white" "black"))
 
 (defun gnugo-current-player ()
@@ -486,6 +485,7 @@ when you are sure the command cannot fail."
   (string-to-number (gnugo-query cmd)))
 
 (defun gnugo-lsquery (message-format &rest args)
+  "Apply `gnugo-query' to args; split its rv (return list of strings)."
   (split-string (apply 'gnugo-query message-format args)))
 
 (defsubst gnugo--count-query (fmt &rest args)
@@ -524,12 +524,33 @@ Return final buffer position (i.e., point)."
           (gnugo-get :obarray)))
 
 (defun gnugo-yang (c)
+  "Return the \"image type information\" corresponding to character C.
+C is one of the four characters used in the ASCII representation
+of a game board -- ?+ (U+2B PLUS SIGN), ?. (U+2E FULL STOP), ?X
+and ?O (U+58 and U+4F, LATIN CAPITAL LETTER X and O, respectively).
+For example, here is a 5x5 board with two stones placed:
+
+  . . . . .
+  . O . + .          (white at B4)
+  . . + . .
+  . + . + X          (black at E2)
+  . . . . .
+
+The image type information consists of a single symbol for ?. and ?+
+and a pair (SANS-POINT . WITH-POINT) for ?X and ?O.  Both SANS-POINT
+and WITH-POINT are symbols.  For other C, return nil."
   (gnugo-aqr c '((?+ . hoshi)
                  (?. . empty)
                  (?X . (bmoku . bpmoku))
                  (?O . (wmoku . wpmoku)))))
 
 (defun gnugo-yy (yin yang &optional momentaryp)
+  "Return a symbol made by formatting YIN (an integer) and YANG.
+The returned symbol has the format N-SYMBOL.
+
+If YANG is a symbol, use it directly.  Otherwise, YANG must be a pair.
+If optional arg MOMENTARYP is non-nil, use the `cdr' of YANG.
+Otherwise, use the `car' of YANG.  See `gnugo-yang'."
   (gnugo-f (format "%d-%s"
                    yin (cond ((symbolp yang) yang)
                              (momentaryp (cdr yang))
@@ -552,7 +573,7 @@ Return final buffer position (i.e., point)."
                               'intangible)
   "Text property that controls intangibility.")
 
-(defun gnugo-propertize-board-buffer ()
+(defun gnugo--propertize-board-buffer ()
   (erase-buffer)
   (insert (substring (gnugo--q "showboard") 3))
   (let* ((grid-props (list 'invisible :nogrid
@@ -638,7 +659,7 @@ Return final buffer position (i.e., point)."
     (put-text-property (point) (line-end-position)
                        'category %gspc)))
 
-(defun gnugo-merge-showboard-results ()
+(defun gnugo--merge-showboard-results ()
   (let ((aft (substring (gnugo--q "showboard") 3))
         (adj 1)                         ; string to buffer position adjustment
 
@@ -912,7 +933,7 @@ For all other values of RSEL, do nothing and return nil."
     (unless resignp
       (gnugo--q/ue "play %s %s" color move))
     (unless passp
-      (gnugo-merge-showboard-results))
+      (gnugo--merge-showboard-results))
     (gnugo-put :last-mover color)
     (when (if simple
               who
@@ -1061,7 +1082,7 @@ its move."
       (dolist (group (apply #'append (mapcar #'cdr game-over)))
         (gnugo--zonk-ovs (cdar group))
         (setcdr (car group) nil))
-      (gnugo-propertize-board-buffer))
+      (gnugo--propertize-board-buffer))
     ;; last move
     (when move
       (cl-destructuring-bind (l-ov . r-ov) (gnugo-get :paren-ov)
@@ -1657,7 +1678,7 @@ If FILENAME already exists, Emacs confirms that you wish to overwrite it."
                 (gnugo--no-worries (gnugo--q "undo")))
       (pop (aref monkey 0))
       (gnugo-put :last-mover (gnugo-current-player))
-      (gnugo-merge-showboard-results)   ; all
+      (gnugo--merge-showboard-results)  ; all
       (gnugo-refresh)                   ; this
       (redisplay))                      ; eye candy
     (let* ((ulastp (string= (gnugo-get :last-mover) user-color))
