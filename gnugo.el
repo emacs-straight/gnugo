@@ -849,9 +849,7 @@ For all other values of RSEL, do nothing and return nil."
 
 (defun gnugo-close-game (end-time resign)
   (gnugo-put :game-end-time end-time)
-  (let ((now (or end-time (current-time))))
-    (gnugo-put :scoring-seed (logior (ash (logand (car now) 255) 16)
-                                     (cadr now))))
+  (gnugo-put :scoring-seed (logand (random t) #xffffff))
   (gnugo-put :game-over
     (cl-flet
         ;; Q: What form does a game-over "group" take?
