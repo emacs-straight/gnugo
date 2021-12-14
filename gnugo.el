@@ -7,7 +7,7 @@
 ;; Version: 3.1.1
 ;; Package-Requires: ((ascii-art-to-unicode "1.5") (xpm "1.0.1") (cl-lib "0.5"))
 ;; Keywords: games, processes
-;; URL: http://www.gnuvola.org/software/gnugo/
+;; URL: https://www.gnuvola.org/software/gnugo/
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -28,7 +28,7 @@
 ;; -------
 ;;
 ;; This file provides the command `gnugo' which allows you to play the game of
-;; go against the external program "gnugo" (http://www.gnu.org/software/gnugo)
+;; go against the external program "gnugo" (https://www.gnu.org/software/gnugo)
 ;; in a dedicated Emacs buffer, or to resume a game in progress.  NOTE: In
 ;; this file, to avoid confusion w/ elisp vars and funcs, we use the term "GNU
 ;; Go" to refer to the process object created by running the external program.
@@ -82,7 +82,7 @@
 ;; Meta-Meta-Playing (aka Hacking)
 ;; -------------------------------
 ;;
-;; <http://git.sv.gnu.org/cgit/emacs/elpa.git/tree/packages/gnugo/>
+;; <https://git.savannah.gnu.org/cgit/emacs/elpa.git/tree?h=externals/gnugo>
 
 ;;; Code:
 
@@ -105,7 +105,7 @@ This follows a MAJOR.MINOR.PATCH scheme.")
 This program must accept command line args:
  --mode gtp --quiet
 For more information on GTP and GNU Go, please visit:
-<http://www.gnu.org/software/gnugo>")
+<https://www.gnu.org/software/gnugo>")
 
 (defvar gnugo-start-game-hook nil
   "Normal hook run immediately before the first move of the game.
